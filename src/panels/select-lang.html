@@ -75,7 +75,7 @@
         document.querySelector('.button-divs').style.display = 'flex';
     }, 2000);
 
-    const { getValue, setValue } = require('./assets/js/utils/storage');
+    const { getValue, setValue } = require('../assets/js/utils/storage');
 
     //obtener todos los botones y añadirles un evento click, dependiendo del idioma, hacer un ipcRenderer.send('change-lang', 'lang')
     const buttons = document.querySelectorAll('.button');

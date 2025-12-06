@@ -790,7 +790,11 @@ class Servers {
         const proc = require("child_process").spawn(
           javaExe,
           ["-jar", `${this.serverDir}/server.jar`, "nogui"],
-          { cwd: this.serverDir, stdio: "ignore" }
+          {
+            cwd: this.serverDir,
+            stdio: "ignore",
+            windowsHide: true
+          }
         );
 
         const propsPath = path.join(this.serverDir, "server.properties");
@@ -1433,7 +1437,11 @@ class Servers {
     this.serverProc = require("child_process").spawn(
       javaExe,
       javaArgs,
-      { cwd: this.serverDir, windowsHide: true }
+      {
+        cwd: this.serverDir,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true
+      }
     );
 
     await this.tryCreateTunnel();
@@ -1582,7 +1590,10 @@ class Servers {
     const frpc = await this.ensureFrpc();
     const ini = await this.writeFrpcIni(cfg, token);
     this.frpcProc = require("child_process")
-      .spawn(frpc, ["-c", ini], { stdio: "inherit" });
+      .spawn(frpc, ["-c", ini], {
+        stdio: "ignore",
+        windowsHide: true
+      });
     this.frpcProc.unref();
   }
 
@@ -1670,7 +1681,7 @@ remote_port = ${cfg.remote_port}`.trim();
     const urlpkg = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url;
     let account = await this.database?.getSelectedAccount();
     const ram = (await this.database.get("1234", "ram")).value;
-    
+
     // Cargar dinámicamente minecraft-java-core
     const minecraftLib = await loadMinecraftJavaCore(this.config);
     const { Launch } = minecraftLib;

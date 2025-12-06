@@ -95,7 +95,7 @@ function setLoadingText(keyOrText) {
     if (!el) return;
     el.innerHTML = keyOrText;
 }
-function applyChristmasUI(config, { startup }) {
+async function applyChristmasUI(config, { startup }) {
     if (!config || typeof document === "undefined") return;
     const snow = getEl("christmas-snowflakes");
     const up = getEl("rectangulo-arriba");
@@ -109,13 +109,53 @@ function applyChristmasUI(config, { startup }) {
         if (down) down.src = "assets/images/icons/pengu_christmas.gif";
         if (snow) snow.style.display = "";
     }
-    if (config.christmasTheme?.songEnabled && !songStarted) {
+
+    let currentAudio = null;
+
+    if (config.christmasTheme?.songEnabled && !songStarted && !await getValue("christmas-music-disabled")) {
         try {
-            const audio = new Audio("assets/audios/jingle-bells.mp3");
-            audio.volume = 0.5;
-            audio.play().catch(() => { });
+            currentAudio = new Audio("assets/audios/jingle-bells.mp3");
+            currentAudio.volume = 0.5;
+            currentAudio.loop = true;
+            currentAudio.play().catch(() => { });
             songStarted = true;
+
+            document.getElementById("disable-music").style.display = "block";
         } catch { }
+    }
+
+    if (config.christmasTheme?.songEnabled && await getValue("christmas-music-disabled")) {
+        document.getElementById("disable-music").style.display = "block";
+        document.getElementById("disable-music").innerHTML = "Activate background music";
+    }
+
+    const disableMusicBtn = document.getElementById("disable-music");
+    if (disableMusicBtn) {
+        disableMusicBtn.addEventListener("click", async () => {
+            const isDisabled = await getValue("christmas-music-disabled");
+
+            if (isDisabled) {
+                // Reactivar música
+                try {
+                    currentAudio = new Audio("assets/audios/jingle-bells.mp3");
+                    currentAudio.volume = 0.5;
+                    currentAudio.loop = true;
+                    currentAudio.play().catch(() => { });
+                    await setValue("christmas-music-disabled", false);
+                    disableMusicBtn.innerHTML = "Disable background music";
+                } catch { }
+            } else {
+                // Desactivar música
+                try {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.currentTime = 0;
+                    }
+                    await setValue("christmas-music-disabled", true);
+                    disableMusicBtn.innerHTML = "Activate background music";
+                } catch { }
+            }
+        });
     }
 }
 

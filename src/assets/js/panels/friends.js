@@ -873,7 +873,7 @@ class Friends {
                  style="background-image:url('https://api.battlylauncher.com/api/skin/${friend.username}')"></div>
             <div class="online-friend-data">
               <p class="online-friend-name">${friend.username}</p>
-              <p class="online-friend-status">${friend.details}</p>
+              <p class="online-friend-status">${friend.details ?? 'En el menú principal'}</p>
             </div>`;
             fragment.appendChild(friendDiv);
 

@@ -31,25 +31,25 @@ class LibraryLoader {
                 return this.libraryPath;
             }
 
-        console.log(`🔄 Descargando minecraft-java-core v${config.version}...`);
+            console.log(`🔄 Descargando minecraft-java-core v${config.version}...`);
 
-        // Crear directorio si no existe
-        if (!fs.existsSync(this.libraryPath)) {
-            fs.mkdirSync(this.libraryPath, { recursive: true });
-        }
+            // Crear directorio si no existe
+            if (!fs.existsSync(this.libraryPath)) {
+                fs.mkdirSync(this.libraryPath, { recursive: true });
+            }
 
-        // Descargar el ZIP en un directorio temporal diferente
-        const tempDir = path.join(dataDirectory, ".battly", "temp");
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir, { recursive: true });
-        }
-        
+            // Descargar el ZIP en un directorio temporal diferente
+            const tempDir = path.join(dataDirectory, ".battly", "temp");
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+
             const zipPath = path.join(tempDir, "minecraft-java-core.zip");
-            
+
             // Reintentar descarga hasta 3 veces en caso de error
             let downloadSuccess = false;
             let lastError = null;
-            
+
             for (let attempt = 1; attempt <= 3 && !downloadSuccess; attempt++) {
                 try {
                     if (attempt > 1) {
@@ -59,20 +59,23 @@ class LibraryLoader {
                             fs.unlinkSync(zipPath);
                         }
                     }
-                    
+
                     await this.downloadFile(config.url, zipPath);
                     downloadSuccess = true;
                 } catch (error) {
                     lastError = error;
-                    console.error(`❌ Error en intento ${attempt}:`, error.message);
+                    console.error(`❌ Error en intento ${attempt}:`);
+                    console.error(`   Mensaje: ${error.message || 'Sin mensaje'}`);
+                    console.error(`   Stack: ${error.stack || 'Sin stack trace'}`);
                     if (attempt < 3) {
                         await new Promise(resolve => setTimeout(resolve, 2000)); // Esperar 2s antes de reintentar
                     }
                 }
             }
-            
+
             if (!downloadSuccess) {
-                throw new Error(`No se pudo descargar después de 3 intentos: ${lastError.message}`);
+                const errorDetails = lastError ? `${lastError.message}\nStack: ${lastError.stack}` : 'Error desconocido';
+                throw new Error(`No se pudo descargar después de 3 intentos:\n${errorDetails}`);
             }
 
             // Verificar checksum si está disponible
@@ -88,26 +91,29 @@ class LibraryLoader {
             } else {
                 console.warn("⚠️ No hay checksum configurado para verificar la integridad del archivo");
             }        // Limpiar directorio anterior
-        console.log("🧹 Limpiando versión anterior...");
-        await this.cleanLibraryDirectory();
+            console.log("🧹 Limpiando versión anterior...");
+            await this.cleanLibraryDirectory();
 
-        // Extraer el ZIP
-        console.log("📂 Extrayendo archivos...");
-        await this.extractZip(zipPath, this.libraryPath);
+            // Extraer el ZIP
+            console.log("📂 Extrayendo archivos...");
+            await this.extractZip(zipPath, this.libraryPath);
 
-        // Eliminar el ZIP temporal
-        try {
-            fs.unlinkSync(zipPath);
-        } catch (error) {
-            console.warn("⚠️ No se pudo eliminar el archivo temporal:", error.message);
-        }            // Guardar información de versión
+            // Eliminar el ZIP temporal
+            try {
+                fs.unlinkSync(zipPath);
+            } catch (error) {
+                console.warn("⚠️ No se pudo eliminar el archivo temporal:", error.message);
+            }            // Guardar información de versión
             await this.saveVersionInfo(config);
 
             console.log(`✅ minecraft-java-core v${config.version} instalada correctamente`);
             return this.libraryPath;
 
         } catch (error) {
-            console.error("❌ Error al cargar minecraft-java-core:", error);
+            console.error("❌ Error al cargar minecraft-java-core:");
+            console.error(`   Tipo: ${error.constructor.name}`);
+            console.error(`   Mensaje: ${error.message || 'Sin mensaje'}`);
+            console.error(`   Stack: ${error.stack || 'Sin stack trace'}`);
             throw error;
         }
     }
@@ -124,12 +130,12 @@ class LibraryLoader {
             }
 
             const versionInfo = JSON.parse(fs.readFileSync(this.versionFilePath, "utf-8"));
-            
+
             // Verificar versión
             if (versionInfo.version !== requiredVersion) {
                 return false;
             }
-            
+
             // Validar integridad de la librería
             if (!this.validateLibraryIntegrity()) {
                 console.warn("⚠️ La librería está corrupta o incompleta, se descargará nuevamente");
@@ -157,15 +163,15 @@ class LibraryLoader {
             file.on('error', (error) => {
                 fileWriteError = error;
                 file.close();
-                fs.unlinkSync(destination).catch(() => {});
-                reject(error);
+                try { fs.unlinkSync(destination); } catch (e) { }
+                reject(new Error(`Error de escritura de archivo: ${error.message}`));
             });
-            
+
             https.get(url, (response) => {
                 if (response.statusCode === 302 || response.statusCode === 301) {
                     // Seguir redirecciones
                     file.close();
-                    fs.unlinkSync(destination).catch(() => {});
+                    try { fs.unlinkSync(destination); } catch (e) { }
                     return this.downloadFile(response.headers.location, destination)
                         .then(resolve)
                         .catch(reject);
@@ -173,7 +179,7 @@ class LibraryLoader {
 
                 if (response.statusCode !== 200) {
                     file.close();
-                    fs.unlinkSync(destination).catch(() => {});
+                    try { fs.unlinkSync(destination); } catch (e) { }
                     reject(new Error(`Error al descargar: HTTP ${response.statusCode}`));
                     return;
                 }
@@ -189,8 +195,8 @@ class LibraryLoader {
 
                 response.on('error', (error) => {
                     file.close();
-                    fs.unlinkSync(destination).catch(() => {});
-                    reject(error);
+                    try { fs.unlinkSync(destination); } catch (e) { }
+                    reject(new Error(`Error en respuesta HTTP: ${error.message}`));
                 });
 
                 response.pipe(file);
@@ -198,11 +204,11 @@ class LibraryLoader {
                 file.on('finish', () => {
                     file.close((err) => {
                         if (err || fileWriteError) {
-                            fs.unlinkSync(destination).catch(() => {});
+                            try { fs.unlinkSync(destination); } catch (e) { }
                             reject(err || fileWriteError);
                         } else {
                             console.log("\n✅ Descarga completada");
-                            
+
                             // Verificar que el archivo se escribió correctamente
                             if (!fs.existsSync(destination)) {
                                 reject(new Error("El archivo no se guardó correctamente"));
@@ -217,8 +223,8 @@ class LibraryLoader {
 
             }).on('error', (error) => {
                 file.close();
-                fs.unlinkSync(destination).catch(() => {});
-                reject(error);
+                try { fs.unlinkSync(destination); } catch (e) { }
+                reject(new Error(`Error de conexión HTTPS: ${error.message || error.code || 'Desconocido'}`));
             });
         });
     }
@@ -264,12 +270,12 @@ class LibraryLoader {
                 }
 
                 console.log(`📂 Extrayendo ZIP de ${stats.size} bytes desde: ${zipPath}`);
-                
+
                 const zip = new AdmZip(zipPath);
                 const entries = zip.getEntries();
-                
+
                 console.log(`📦 El ZIP contiene ${entries.length} archivos`);
-                
+
                 // Verificar si hay una carpeta raíz común
                 let rootFolder = null;
                 if (entries.length > 0) {
@@ -285,7 +291,7 @@ class LibraryLoader {
                         }
                     }
                 }
-                
+
                 // Extraer
                 if (rootFolder) {
                     // Si hay carpeta raíz, extraer saltándola
@@ -296,11 +302,11 @@ class LibraryLoader {
                             if (relativePath && !entry.isDirectory) {
                                 const targetPath = path.join(destination, relativePath);
                                 const targetDir = path.dirname(targetPath);
-                                
+
                                 if (!fs.existsSync(targetDir)) {
                                     fs.mkdirSync(targetDir, { recursive: true });
                                 }
-                                
+
                                 fs.writeFileSync(targetPath, entry.getData());
                             }
                         }
@@ -309,16 +315,16 @@ class LibraryLoader {
                     // No hay carpeta raíz, extraer normalmente
                     zip.extractAllTo(destination, true);
                 }
-                
+
                 console.log(`✅ Extracción completada en: ${destination}`);
-                
+
                 // Verificar que package.json existe
                 const packageJsonPath = path.join(destination, "package.json");
                 if (fs.existsSync(packageJsonPath)) {
                     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
                     const mainFile = packageJson.main || "Index.js";
                     const indexPath = path.join(destination, mainFile);
-                    
+
                     if (fs.existsSync(indexPath)) {
                         console.log(`✅ Archivo principal encontrado: ${mainFile}`);
                     } else {
@@ -333,7 +339,7 @@ class LibraryLoader {
                     const files = fs.readdirSync(destination);
                     files.forEach(f => console.log(`  - ${f}`));
                 }
-                
+
                 resolve();
             } catch (error) {
                 console.error(`❌ Error durante la extracción:`, error);
@@ -393,7 +399,7 @@ class LibraryLoader {
             // Verificar estructura básica
             const requiredFiles = ['package.json'];
             const requiredDirs = ['build'];
-            
+
             for (const file of requiredFiles) {
                 const filePath = path.join(this.libraryPath, file);
                 if (!fs.existsSync(filePath)) {
@@ -401,7 +407,7 @@ class LibraryLoader {
                     return false;
                 }
             }
-            
+
             for (const dir of requiredDirs) {
                 const dirPath = path.join(this.libraryPath, dir);
                 if (!fs.existsSync(dirPath)) {
@@ -409,7 +415,7 @@ class LibraryLoader {
                     return false;
                 }
             }
-            
+
             // Verificar package.json válido
             try {
                 const packageJson = JSON.parse(fs.readFileSync(path.join(this.libraryPath, "package.json"), "utf-8"));
@@ -417,7 +423,7 @@ class LibraryLoader {
                     console.error("❌ package.json no tiene campo 'main'");
                     return false;
                 }
-                
+
                 // Verificar que el archivo main existe
                 const mainPath = path.join(this.libraryPath, packageJson.main);
                 if (!fs.existsSync(mainPath)) {
@@ -428,7 +434,7 @@ class LibraryLoader {
                 console.error("❌ Error al leer package.json:", error.message);
                 return false;
             }
-            
+
             return true;
         } catch (error) {
             console.error("❌ Error al validar integridad:", error);
@@ -443,7 +449,7 @@ class LibraryLoader {
     requireMinecraftLibrary() {
         // Leer el package.json para obtener el punto de entrada
         const packageJsonPath = path.join(this.libraryPath, "package.json");
-        
+
         if (!fs.existsSync(packageJsonPath)) {
             throw new Error("minecraft-java-core no está instalada. No se encontró package.json. Intenta reiniciar Battly.");
         }
@@ -457,13 +463,13 @@ class LibraryLoader {
 
         const mainFile = packageJson.main || "Index.js";
         const indexPath = path.join(this.libraryPath, mainFile);
-        
+
         console.log(`📦 Punto de entrada de la librería: ${mainFile}`);
-        
+
         if (!fs.existsSync(indexPath)) {
             throw new Error(`minecraft-java-core: No se encontró el archivo principal en ${indexPath}. La instalación puede estar incompleta.`);
         }
-        
+
         // Verificar integridad básica de la librería
         const requiredDirs = ['build'];
         const missingDirs = requiredDirs.filter(dir => !fs.existsSync(path.join(this.libraryPath, dir)));
@@ -490,9 +496,9 @@ class LibraryLoader {
         if (require.cache[require.resolve(indexPath)]) {
             delete require.cache[require.resolve(indexPath)];
         }
-        
+
         console.log("📚 Cargando minecraft-java-core con acceso a node_modules de Battly");
-        
+
         return require(indexPath);
     }
 }
@@ -516,7 +522,7 @@ function getLibraryLoader() {
 async function loadMinecraftJavaCore(battlyConfig, options = {}) {
     const loader = getLibraryLoader();
     const libraryConfig = battlyConfig.libraries.package_mimbpyzw_s52o;
-    
+
     try {
         await loader.loadMinecraftLibrary(libraryConfig);
         return loader.requireMinecraftLibrary();

@@ -54,6 +54,8 @@ class Login {
                 microsoftBtn.disabled = true;
 
                 try {
+                    console.log("🔃 Iniciando sesión con Microsoft...");
+                    console.log(this.config.client_id);
                     const account_connect = await ipcRenderer.invoke('Microsoft-window', this.config.client_id);
                     console.log(account_connect);
 
@@ -88,7 +90,7 @@ class Login {
                     addAccount(account, false, true);
                     accountSelect(account.uuid, true);
 
-                    let news_shown = await getValue("news_shown_v2.0");
+                    let news_shown = await getValue("news_shown_v3.0");
                     document.querySelector(".preload-content").style.display = "none";
 
                     if (!news_shown || news_shown == "false") {
@@ -110,7 +112,7 @@ class Login {
                         changePanel("settings");
                     }, 3000);
                 }
-                
+
                 microsoftBtn.disabled = false;
 
             } catch (err) {
@@ -227,7 +229,7 @@ class Login {
 
                         infoLoginPanel.classList.remove("is-active");
 
-                        let news_shown = await getValue("news_shown_v2.0");
+                        let news_shown = await getValue("news_shown_v3.0");
                         if (!news_shown || news_shown == "false" || news_shown == null || news_shown == undefined) {
                             document.querySelector(".preload-content").style.display = "none";
                             changePanel("news");
@@ -325,7 +327,7 @@ class Login {
 
                     infoLoginPanel.classList.remove("is-active");
 
-                    let news_shown = await getValue("news_shown_v2.0");
+                    let news_shown = await getValue("news_shown_v3.0");
                     if (!news_shown || news_shown == "false" || news_shown == null || news_shown == undefined) {
                         document.querySelector(".preload-content").style.display = "none";
                         changePanel("news");
@@ -539,7 +541,7 @@ class Login {
                     infoLoginPanel.classList.remove("is-active");
 
                     await accountSelect(account.uuid, true);
-                    let news_shown = await getValue("news_shown_v2.0");
+                    let news_shown = await getValue("news_shown_v3.0");
                     if (!news_shown || news_shown == "false" || news_shown == null || news_shown == undefined) {
                         document.querySelector(".preload-content").style.display = "none";
                         changePanel("news");

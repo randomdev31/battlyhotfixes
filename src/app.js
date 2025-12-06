@@ -253,20 +253,25 @@ async function initializeAnalytics() {
     const apiUrl = 'https://api.battlylauncher.com/api/analytics';
 
     analytics = new BattlyAnalytics(apiUrl, userId, userToken, userInfo);
-    await analytics.init();
+    const initSuccess = await analytics.init();
 
-    // Trackear inicio del launcher
-    analytics.track(BattlyAnalytics.Events.LAUNCHER_STARTED, {
-      version: app.getVersion(),
-      platform: process.platform,
-      arch: process.arch,
-      isPackaged: app.isPackaged,
-      electronVersion: process.versions.electron,
-      hasAccount: !!account,
-      username: account?.name || 'anonymous'
-    });
+    if (initSuccess) {
+      // Trackear inicio del launcher solo si la inicialización fue exitosa
+      analytics.track(BattlyAnalytics.Events.LAUNCHER_STARTED, {
+        version: app.getVersion(),
+        platform: process.platform,
+        arch: process.arch,
+        isPackaged: app.isPackaged,
+        electronVersion: process.versions.electron,
+        hasAccount: !!account,
+        username: account?.name || 'anonymous'
+      });
 
-    console.log("✅ Analytics inicializado para usuario:", userId);
+      console.log("✅ Analytics inicializado para usuario:", userId);
+    } else {
+      console.warn("⚠️ Analytics no pudo inicializarse, continuando sin analytics");
+      analytics = null;
+    }
   } catch (error) {
     console.error("❌ Error inicializando analytics:", error);
     analytics = null;
@@ -799,7 +804,28 @@ ipcMain.handle("capture-window-screenshot", async (event) => {
 });
 
 ipcMain.handle("Microsoft-window", async (_event, client_id) => {
-  return await new Microsoft(client_id).getAuth();
+  try {
+    // Leer la configuración directamente desde el archivo local
+    const configPath = path.join(
+      dataDirectory,
+      ".battly",
+      "battly",
+      "launcher",
+      "config-launcher",
+      "config.json"
+    );
+
+    const battlyConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+
+    // Cargar minecraft-java-core dinámicamente
+    const minecraftLib = await loadMinecraftJavaCore(battlyConfig);
+    const { Microsoft } = minecraftLib;
+
+    return await new Microsoft(client_id).getAuth();
+  } catch (error) {
+    console.error('Error al autenticar con Microsoft:', error);
+    throw error;
+  }
 });
 
 app.on("window-all-closed", () => {
@@ -965,7 +991,7 @@ ipcMain.handle("update-app", () => {
       .catch((error) => resolve({ error: true, message: error }));
   });
 });
-const pkgVersion = async () => ({ version: "3.0.0", buildVersion: 1004 });
+const pkgVersion = async () => ({ version: "3.0.1", buildVersion: 1004 });
 ipcMain.handle("update-new-app", async () => {
   console.log(await pkgVersion());
   return new Promise(async (resolve, reject) => {

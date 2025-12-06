@@ -253,11 +253,15 @@ class Launcher {
         if (acc.type === "microsoft") {
           console.log(`🔄 Autenticando Microsoft (Xbox) – ${acc.name}`);
           showPreload("Autenticando cuenta de Microsoft…");
+          console.log(this.config.client_id);
 
           // Cargar dinámicamente minecraft-java-core
-          const minecraftLib = await loadMinecraftJavaCore(this.BattlyConfig);
+          const minecraftLib = await loadMinecraftJavaCore(this.config);
           const { Microsoft } = minecraftLib;
           const refresh = await new Microsoft(this.config.client_id).refresh(acc);
+
+          console.log(`🔄 Cuenta Microsoft actualizada – ${acc.name}`);
+          console.log(refresh);
           if (refresh?.error) throw new Error(refresh.errorMessage);
 
           const updatedAccount = {

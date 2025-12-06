@@ -264,6 +264,24 @@ class LoadMinecraft {
     const Launcher = new Launch();
     await Launcher.Launch(options);
 
+    // Inicializar strings con window.stringLoader
+    langs = {
+      libraries: window.stringLoader?.getString("download.libraries") || "libraries",
+      downloading: window.stringLoader?.getString("download.downloading") || "Descargando",
+      downloading_version: window.stringLoader?.getString("download.downloadingVersion") || "Descargando versión",
+      downloading_json_files: window.stringLoader?.getString("download.downloadingJsonFiles") || "Descargando archivos JSON",
+      downloaded_successfully: window.stringLoader?.getString("download.downloadedSuccessfully") || "descargado correctamente",
+      extracting_loader: window.stringLoader?.getString("download.extractingLoader") || "Extrayendo loader",
+      checking: window.stringLoader?.getString("download.checking") || "Comprobando",
+      installing_loader: window.stringLoader?.getString("download.installingLoader") || "Instalando loader",
+      calculating_time: window.stringLoader?.getString("download.calculatingTime") || "calculando tiempo",
+      estimated_time_not_available: window.stringLoader?.getString("download.estimatedTimeNotAvailable") || "Tiempo estimado no disponible",
+      remaining: window.stringLoader?.getString("download.remaining") || "Quedan",
+      remaining_two: window.stringLoader?.getString("download.remainingTwo") || "Queda",
+      applying_patches: window.stringLoader?.getString("download.applyingPatches") || "Aplicando parches",
+      starting_minecraft: window.stringLoader?.getString("download.startingMinecraft") || "Iniciando Minecraft"
+    };
+
     let JSONDownloadShown = false;
     let seMostroExtrayendo_core = false;
     let lastProgreso = -1;

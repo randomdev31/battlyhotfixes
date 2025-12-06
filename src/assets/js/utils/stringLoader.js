@@ -291,12 +291,17 @@ window.ensureStringLoader = async function () {
     return window.stringLoader;
 };
 
-window.getString = function (path) {
-    if (!window.stringLoader.strings) {
+window.getString = function (path, fallback = null) {
+    if (!window.stringLoader || !window.stringLoader.strings) {
         console.warn('StringLoader not initialized, call ensureStringLoader() first');
-        return path;
+        return fallback || path;
     }
-    return window.stringLoader.getString(path);
+    const result = window.stringLoader.getString(path);
+    // Si el resultado es el mismo que el path, significa que no se encontró
+    if (result === path && fallback) {
+        return fallback;
+    }
+    return result;
 };
 
 /**

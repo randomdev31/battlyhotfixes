@@ -1328,7 +1328,7 @@ class Settings {
       }
 
       currentMajor = major;
-      const m = ensureJavaModal();
+      const m = await ensureJavaModal();
       if (!document.body.contains(m.root)) document.body.appendChild(m.root);
 
       m.version.textContent = `Java ${major}`;
@@ -1452,7 +1452,7 @@ class Settings {
         return;
       }
 
-      const m = ensureJavaModal();
+      const m = await ensureJavaModal();
       m.downloadBtn.disabled = true;
       m.warn.style.display = "block";
       m.progressWrap.style.display = "block";
@@ -1565,7 +1565,7 @@ class Settings {
           if (e.target.closest(".b-java-action")) return;
           const installed = card.dataset.installed === "true";
           if (installed) await selectVersion(major);
-          else openModal(major);
+          else await openModal(major);
         });
 
         btnUse?.addEventListener("click", async (e) => { e.stopPropagation(); await selectVersion(major); });
@@ -1575,7 +1575,7 @@ class Settings {
             new Alert().ShowAlert({ title: `Java ${major} ${await window.getString("settings.javaAlreadyInstalled")}`, icon: "info" });
             return;
           }
-          openModal(major);
+          await openModal(major);
         });
       }
     }

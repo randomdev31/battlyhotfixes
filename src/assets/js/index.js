@@ -92,10 +92,19 @@ class Splash {
 
 		await sleep(1000);
 
-		fetch("https://google.com").then(async () => {
+		// Verificar conectividad con timeout
+		const timeoutPromise = new Promise((_, reject) =>
+			setTimeout(() => reject(new Error('Connection timeout')), 5000)
+		);
+
+		Promise.race([
+			fetch("https://google.com"),
+			timeoutPromise
+		]).then(async () => {
 			this.checkMaintenance();
 			await setValue("offline-mode", false);
-		}).catch(async () => {
+		}).catch(async (error) => {
+			console.warn("No connection or timeout:", error.message);
 			await setValue("offline-mode", true);
 			this.setStatus(stringLoader?.getString("launcher.checking_connection") || "Checking connection...");
 			await sleep(1000);
@@ -109,7 +118,15 @@ class Splash {
 
 	async checkMaintenance() {
 		try {
-			const res = await new LoadAPI().GetConfig(true);
+			// Agregar timeout a la verificación de mantenimiento
+			const timeoutPromise = new Promise((_, reject) =>
+				setTimeout(() => reject(new Error('Maintenance check timeout')), 10000)
+			);
+
+			const res = await Promise.race([
+				new LoadAPI().GetConfig(true),
+				timeoutPromise
+			]);
 
 			if (res.maintenance) return this.shutdown(res.maintenance_message);
 			this.setStatus(stringLoader?.getString("launcher.starting_launcher") || "Starting launcher...");
@@ -119,8 +136,12 @@ class Splash {
 			}, 1000);
 			return true;
 		} catch (error) {
-			console.error(error);
-			return this.shutdown(stringLoader?.getString("launcher.error_connecting_server") || "Error connecting to server");
+			console.error("Error checking maintenance, starting in offline mode:", error);
+			// En lugar de cerrar el launcher, iniciarlo en modo offline
+			this.setStatus(stringLoader?.getString("launcher.offline_mode") || "Starting in offline mode...");
+			await sleep(1500);
+			this.checkForUpdates();
+			return false;
 		}
 	}
 

@@ -589,6 +589,33 @@ i.margin {
   cursor: pointer;
 }
 
+#close {
+  background: #ff5f57;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #ff5f5577;
+  }
+}
+
+#minimize {
+  background: #ffbd2e;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #ffbd2e77;
+  }
+}
+
+#maximize {
+  background: #28c840;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #28c84077;
+  }
+}
+
 .win-btn:hover {
   background: #ffffff55;
 }
@@ -606,11 +633,17 @@ i.margin {
   z-index: 9998;
 }
 
+#christmas-snowflakes {
+  width: 100%;
+  height: 100%;
+  z-index: 9999999999999999;
+  pointer-events: none;
+}
 .snowflake {
   --size: 1vw;
   width: var(--size);
   height: var(--size);
-  background: url("assets/images/rnd/snowflake.webp") no-repeat center center;
+  background: url("../images/rnd/snowflake.webp") no-repeat center center;
   background-size: contain;
   border-radius: 50%;
   position: absolute;
@@ -1295,4 +1328,13 @@ i.margin {
 
 .modal {
   z-index: 999999 !important;
+}
+
+#disable-music {
+  display: none;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+  }
 }
