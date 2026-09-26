@@ -568,28 +568,6 @@ i.margin {
   -webkit-app-region: no-drag;
 }
 
-.titlebar.macos .title {
-  margin-left: 70px;
-}
-
-.titlebar.macos .window-controls {
-  position: absolute;
-  left: 12px;
-  gap: 8px;
-}
-
-.titlebar.macos #close {
-  order: 0;
-}
-
-.titlebar.macos #minimize {
-  order: 1;
-}
-
-.titlebar.macos #maximize {
-  order: 2;
-}
-
 .title {
   display: flex;
   align-items: center;
