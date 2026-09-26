@@ -38,6 +38,7 @@ async function createWindow() {
   destroyWindow();
   mainWindow = new electron.BrowserWindow({
     title: pkg.productname,
+    titleBarStyle: (os.platform() == "darwin" || os.platform() == "linux") ? "hidden" : "default",
     width: 1280,
     height: 720,
     minWidth: 980,
@@ -57,6 +58,9 @@ async function createWindow() {
   });
 
   if (mainWindow) {
+    if (process.platform === "darwin") {
+      mainWindow.setWindowButtonVisibility(false);
+    }
     if (dev) {
       mainWindow.openDevTools();
     }
