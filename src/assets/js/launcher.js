@@ -44,7 +44,7 @@ class Launcher {
 
     console.info("Starting Launcher initialization");
 
-    if (process.platform == "win32") this.initFrame();
+    if (process.platform === "win32" || process.platform === "darwin") this.initFrame();
 
     const { config } = await import("./utils.js");
 
@@ -183,6 +183,9 @@ class Launcher {
     console.log("🔄 Iniciando Frame...");
     document.querySelector(".titlebar").classList.toggle("hide");
     document.querySelector(".dragbar").classList.toggle("hide");
+    if (process.platform === "darwin") {
+      document.querySelector(".titlebar").classList.add("macos");
+    }
 
     document.querySelector("#minimize").addEventListener("click", () => {
       ipcRenderer.send("main-window-minimize");
