@@ -5,9 +5,9 @@ name: Node.js CI
 permissions: write-all
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "fixes" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "fixes" ]
 
 jobs:
   create-release:
