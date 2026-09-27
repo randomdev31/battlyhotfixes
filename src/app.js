@@ -21,7 +21,7 @@ const fetch = require("node-fetch");
 const fs = require("fs");
 const path = require("path");
 const url = require("url");
-const { Notification, Menu, Tray } = require("electron");
+const { Notification, Menu, Tray, nativeImage } = require("electron");
 const notifier = require("node-notifier");
 const Store = require("electron-store");
 const store = new Store({ name: "battly-data" });
@@ -38,6 +38,10 @@ const dataDirectory =
   (process.platform == "darwin"
     ? `${process.env.HOME}/Library/Application Support`
     : process.env.HOME);
+
+const trayIcon = nativeImage
+  .createFromPath(path.join(__dirname, "assets/images/icon.png"))
+  .resize({ width: 25, height: 25 });
 
 if (!fs.existsSync(path.join(dataDirectory, ".battly")))
   fs.mkdirSync(path.join(dataDirectory, ".battly"));
@@ -279,7 +283,7 @@ async function initializeAnalytics() {
 }
 
 app.whenReady().then(async () => {
-  tray = new Tray(path.join(__dirname, "/assets/images/icon.png"));
+  tray = new Tray(trayIcon);
   updateTrayMenu();
 
   const contextMenu = Menu.buildFromTemplate([
