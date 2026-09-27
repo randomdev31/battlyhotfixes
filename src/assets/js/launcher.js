@@ -44,7 +44,7 @@ class Launcher {
 
     console.info("Starting Launcher initialization");
 
-    if (process.platform === "win32" || process.platform === "darwin") this.initFrame();
+    if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") this.initFrame();
 
     const { config } = await import("./utils.js");
 
